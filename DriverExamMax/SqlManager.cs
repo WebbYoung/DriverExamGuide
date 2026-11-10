@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using Microsoft.VisualBasic.ApplicationServices;
 using MySqlConnector;
+using System.Text.Json;
 
 namespace DriverExam
 {
@@ -18,9 +19,47 @@ namespace DriverExam
 			connectionString = ConnectionString??throw new ArgumentNullException(nameof(connection));
 			connection = new MySqlConnection(connectionString);
 		}
+		/// <summary>
+		/// 默认连接串。凭据不写进源码，读取顺序：
+		/// 1) 环境变量 DRIVEREXAM_DB
+		/// 2) 可执行文件目录下 appsettings.json 的 ConnectionStrings:DriverExamDb
+		/// 3) 抛异常提示如何配置（示例见仓库内 appsettings.Example.json）
+		/// </summary>
 		public SqlManager()
 		{
-			connection = new MySqlConnection("Server=localhost;Database=user;Uid=root;Pwd=wby660928;");
+			connection = new MySqlConnection(ResolveConnectionString());
+		}
+
+		private static string ResolveConnectionString()
+		{
+			string? fromEnv = Environment.GetEnvironmentVariable("DRIVEREXAM_DB");
+			if (!string.IsNullOrWhiteSpace(fromEnv))
+			{
+				return fromEnv;
+			}
+
+			string configPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+			if (File.Exists(configPath))
+			{
+				try
+				{
+					using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(configPath));
+					if (doc.RootElement.TryGetProperty("ConnectionStrings", out JsonElement section) &&
+						section.TryGetProperty("DriverExamDb", out JsonElement value) &&
+						value.GetString() is { Length: > 0 } conn)
+					{
+						return conn;
+					}
+				}
+				catch (JsonException)
+				{
+					// 配置损坏时继续走下面的报错分支，避免静默连到错误库
+				}
+			}
+
+			throw new InvalidOperationException(
+				"未配置数据库连接。请设置环境变量 DRIVEREXAM_DB，或在程序目录的 appsettings.json 中写入 "
+				+ "ConnectionStrings:DriverExamDb（示例见仓库 appsettings.Example.json）。");
 		}
 		/// <summary>
 		/// 打开数据库连接
