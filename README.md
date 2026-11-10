@@ -3,6 +3,8 @@
 > 这个仓库是 **DriverExam 的第一代桌面实现**，代码已并入 [WebbYoung/DriverExam](https://github.com/WebbYoung/DriverExam) 的 [`desktop/`](https://github.com/WebbYoung/DriverExam/tree/master/desktop) 目录，后续开发在那里进行。
 >
 > 本仓库保留原样作为 2025-09 的留档快照，不再更新（唯一例外是清除源码里误提交的数据库凭据）。
+>
+> 📦 **本仓库已在 GitHub 上设为 archived（只读）**：不能提交、开 issue、开 PR。需要改动请去 [DriverExam](https://github.com/WebbYoung/DriverExam)。
 
 ## 这里是什么
 
